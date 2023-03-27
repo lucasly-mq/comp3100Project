@@ -1,26 +1,47 @@
 import java.io.*;  
 import java.net.*;  
 public class Server {
+    public static void readFromBuffer(BufferedReader input) throws IOException {
+        int charNum = input.read();
+        while (charNum != 10){
+            System.out.print((char) charNum);
+            charNum = input.read();
+        }
+        System.out.println();
+    }
 
     public static void main(String args[]){
         try {
         ServerSocket ss = new ServerSocket(6665);
         Socket s = ss.accept();
+        // Handshaking 
+        BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()));
+        readFromBuffer(in); 
 
-        DataInputStream dis = new DataInputStream(s.getInputStream());
-        String str = (String) dis.readUTF();  
-        System.out.println(str);
-    
         DataOutputStream dout = new DataOutputStream(s.getOutputStream());  
-        dout.writeUTF("G'DAY");
+        dout.write(("OK\n").getBytes());
+        dout.flush();
+        // Write OK + System Message
+
+        dout.write(("OK\n").getBytes());
+
+        dout.write(("Welcome!\n").getBytes());
         dout.flush();
 
-        dis = new DataInputStream(s.getInputStream());
-        str = (String) dis.readUTF();  
-        System.out.println(str);
+        // Logic
+        
+        readFromBuffer(in);
+        readFromBuffer(in);
+    
+        //DataOutputStream dout = new DataOutputStream(s.getOutputStream());  
+        dout.write(("JOBN\n").getBytes());
+        dout.flush();
+        
+        readFromBuffer(in);
 
         dout = new DataOutputStream(s.getOutputStream());
-        dout.writeUTF("BYE");
+
+        dout.write(("BYE\n").getBytes());
         dout.flush();
         dout.close();
 
