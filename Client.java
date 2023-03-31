@@ -36,8 +36,10 @@ public class Client {
             dout.flush();
             // RECEIVE SOMETHING
             System.out.println(readFromBuffer(din));
+
+            /*
             // GET SERVER INFO
-            dout.write(("GETS All\n").getBytes());
+            dout.write(("GETS ALL\n").getBytes());
 
             String message = readFromBuffer(din);
             System.out.println(message);
@@ -52,6 +54,58 @@ public class Client {
             }
 
             System.out.println(array.toString());
+            */
+
+            int coreNo = 1;
+            int currentRAMSize = 1;
+            int largestRAMSize = currentRAMSize;
+            
+            // GET DATA
+            dout.write(("GETS Capable " + coreNo + " 100 100\n").getBytes());
+            dout.write(("OK\n").getBytes());
+            String message = readFromBuffer(din);
+            String[] sysInfoMessage = message.split(" ");
+
+        
+       
+            
+            // while doesn't == ., increment coreNo, observe response if > largest etc
+            while (message.equals(".") != true) {
+                dout.write(("OK\n").getBytes());
+                message = readFromBuffer(din);
+                sysInfoMessage = message.split(" ");
+
+                if (sysInfoMessage.length != 1)
+                    currentRAMSize = Integer.parseInt(sysInfoMessage[4]);
+                
+
+                if (currentRAMSize > largestRAMSize){
+                    largestRAMSize = currentRAMSize;
+                } 
+
+                coreNo *= 2;
+                dout.write(("GETS Capable " + coreNo + " 100 100\n").getBytes());
+            }
+            System.out.println(sysInfoMessage[0]);
+            System.out.println(largestRAMSize);
+
+
+            /*
+            dout.write(("OK\n").getBytes());
+
+            String[] sysInfoMessage = message.split(" ");
+            List<String> tempArray = Arrays.asList(sysInfoMessage);
+            ArrayList<String> sysInfoMessageArray = new ArrayList<>(tempArray);
+
+            currentRAMSize = Integer.parseInt(sysInfoMessageArray.get(4));
+            largestRAMSize = currentRAMSize; 
+
+
+
+            System.out.println(currentRAMSize);
+            dout.write(("OK\n").getBytes());
+            */
+
 
             // SEND QUIT
             dout.write(("QUIT\n").getBytes());
