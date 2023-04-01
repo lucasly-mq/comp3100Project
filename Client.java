@@ -20,6 +20,7 @@ public class Client {
             // Handshaking
             BufferedReader din = new BufferedReader(new InputStreamReader(s.getInputStream()));
             DataOutputStream dout = new DataOutputStream(new DataOutputStream(s.getOutputStream()));  
+            
             // SEND HELO
             dout.write(("HELO\n").getBytes());
             dout.flush();  
@@ -37,28 +38,9 @@ public class Client {
             // RECEIVE SOMETHING
             System.out.println(readFromBuffer(din));
 
-            /*
-            // GET SERVER INFO
-            dout.write(("GETS ALL\n").getBytes());
-
-            String message = readFromBuffer(din);
-            System.out.println(message);
-            ArrayList<String> array = new ArrayList<>();
-
-            // READ SERVER INFO
-            while (message.equals(".") != true){
-                dout.write(("OK\n").getBytes());
-                array.add(message);
-                message = readFromBuffer(din);
-                //System.out.println(message);
-            }
-
-            System.out.println(array.toString());
-            */
-
             int coreNo = 1;
             int currentRAMSize = 1;
-            int largestRAMSize = currentRAMSize;
+            int largestRAMSize = 0;
             
             // GET DATA
             dout.write(("GETS Capable " + coreNo + " 100 100\n").getBytes());
@@ -66,47 +48,30 @@ public class Client {
             String message = readFromBuffer(din);
             String[] sysInfoMessage = message.split(" ");
 
-        
-       
-            
-            // while doesn't == ., increment coreNo, observe response if > largest etc
+            // IDENTIFY LARGEST SERVER
             while (message.equals(".") != true) {
                 dout.write(("OK\n").getBytes());
                 message = readFromBuffer(din);
-                sysInfoMessage = message.split(" ");
+                dout.write(("OK\n").getBytes());
 
+                if (message.equals(".") != true) 
+                    sysInfoMessage = message.split(" ");
+                
                 if (sysInfoMessage.length != 1)
                     currentRAMSize = Integer.parseInt(sysInfoMessage[4]);
-                
-
-                if (currentRAMSize > largestRAMSize){
+            
+                if (currentRAMSize > largestRAMSize)
                     largestRAMSize = currentRAMSize;
-                } 
-
+                
                 coreNo *= 2;
+              
                 dout.write(("GETS Capable " + coreNo + " 100 100\n").getBytes());
+                dout.write(("OK\n").getBytes());
             }
-            System.out.println(sysInfoMessage[0]);
-            System.out.println(largestRAMSize);
 
 
-            /*
-            dout.write(("OK\n").getBytes());
-
-            String[] sysInfoMessage = message.split(" ");
-            List<String> tempArray = Arrays.asList(sysInfoMessage);
-            ArrayList<String> sysInfoMessageArray = new ArrayList<>(tempArray);
-
-            currentRAMSize = Integer.parseInt(sysInfoMessageArray.get(4));
-            largestRAMSize = currentRAMSize; 
-
-
-
-            System.out.println(currentRAMSize);
-            dout.write(("OK\n").getBytes());
-            */
-
-
+            dout.write(("SCHD 0 " + sysInfoMessage[0] + " 0\n").getBytes());
+        
             // SEND QUIT
             dout.write(("QUIT\n").getBytes());
             dout.flush();
