@@ -14,14 +14,8 @@ public class Client {
         return message;
     }
 
-    public static void main(String args[]) {
-        try {
-            Socket s = new Socket("localhost", 50000);  
-            // Handshaking
-            BufferedReader din = new BufferedReader(new InputStreamReader(s.getInputStream()));
-            DataOutputStream dout = new DataOutputStream(new DataOutputStream(s.getOutputStream()));  
-            
-            // SEND HELO
+    public static String handShake(BufferedReader din, DataOutputStream dout) throws IOException {
+          // SEND HELO
             dout.write(("HELO\n").getBytes());
             dout.flush();  
             // RECEIVE OK
@@ -31,48 +25,73 @@ public class Client {
             dout.write(("AUTH " + username + "\n").getBytes());
             dout.flush();
             // RECEIVE OK 
-            System.out.println(readFromBuffer(din));
-            // SEND REDY 
+            return (readFromBuffer(din));
+    }
+
+
+
+
+
+    public static void main(String args[]) {
+        try {
+            Socket s = new Socket("localhost", 50000);  
+            // Handshaking
+            BufferedReader din = new BufferedReader(new InputStreamReader(s.getInputStream()));
+            DataOutputStream dout = new DataOutputStream(new DataOutputStream(s.getOutputStream()));  
+            handShake(din, dout);
+
+            String jobMessage = "";
+            String message = "";
+
+            int currentCoreSize = 1;
+            int largestCoreSize = 0;
+
             dout.write(("REDY\n").getBytes());
-            dout.flush();
-            // RECEIVE SOMETHING
+            jobMessage = readFromBuffer(din); // Receive JOB
+            String[] test = jobMessage.split(" ");
+            int jobID = Integer.parseInt(test[2]);
+            
+            // IDENTIFY LARGEST SERVER
+            dout.write(("GETS All\n").getBytes());
+            message = readFromBuffer(din); // Receive DATA nRecs recSize 
+            System.out.println(message);
+            dout.write(("OK\n").getBytes());
+
+            String[] sysInfoMessage = message.split(" ");
+            int nRecs = Integer.parseInt(sysInfoMessage[1]);
+            String lrgestServerType = "";
+
+            for (int i = 0; i < nRecs; i++){
+                message = readFromBuffer(din);
+               
+                sysInfoMessage = message.split(" ");
+                currentCoreSize = Integer.parseInt(sysInfoMessage[4]);
+
+                if (currentCoreSize > largestCoreSize){
+                    largestCoreSize = currentCoreSize;
+                    lrgestServerType = sysInfoMessage[0];
+                }
+            }   
+            
+            dout.write(("OK\n").getBytes());
+            System.out.println(readFromBuffer(din)); // Receive .
+            dout.write(("SCHD " + jobID + " " + lrgestServerType + " 0\n").getBytes());
             System.out.println(readFromBuffer(din));
 
-            int coreNo = 1;
-            int currentRAMSize = 1;
-            int largestRAMSize = 0;
-            
-            // GET DATA
-            dout.write(("GETS Capable " + coreNo + " 100 100\n").getBytes());
-            dout.write(("OK\n").getBytes());
-            String message = readFromBuffer(din);
-            String[] sysInfoMessage = message.split(" ");
-
-            // IDENTIFY LARGEST SERVER
-            while (message.equals(".") != true) {
-                dout.write(("OK\n").getBytes());
-                message = readFromBuffer(din);
-                dout.write(("OK\n").getBytes());
-
-                if (message.equals(".") != true) 
-                    sysInfoMessage = message.split(" ");
-                
-                if (sysInfoMessage.length != 1)
-                    currentRAMSize = Integer.parseInt(sysInfoMessage[4]);
-            
-                if (currentRAMSize > largestRAMSize)
-                    largestRAMSize = currentRAMSize;
-                
-                coreNo *= 2;
-              
-                dout.write(("GETS Capable " + coreNo + " 100 100\n").getBytes());
-                dout.write(("OK\n").getBytes());
+            while (!(jobMessage.equals("NONE"))){
+                dout.write(("REDY\n").getBytes());
+                jobMessage = readFromBuffer(din);
+                test = jobMessage.split(" ");
+                if (test.length > 1){
+                    jobID = Integer.parseInt(test[2]);
+                    dout.write(("SCHD " + jobID + " " + lrgestServerType + " 0\n").getBytes());
+                    jobMessage = readFromBuffer(din);
+                }
             }
 
-
-            dout.write(("SCHD 0 " + sysInfoMessage[0] + " 0\n").getBytes());
-        
+            dout.write(("OK\n").getBytes());
             // SEND QUIT
+
             dout.write(("QUIT\n").getBytes());
             dout.flush();
             // RECEIVE QUIT
