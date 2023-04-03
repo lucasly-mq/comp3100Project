@@ -42,7 +42,7 @@ public class Client {
             String jobMessage = ""; 
             dout.write(("REDY\n").getBytes());
             jobMessage = readFromBuffer(din); // Receive JOB
-            System.out.println(jobMessage + " FIRST JOB!");
+    
             
             String[] jobInfo = jobMessage.split(" ");
             String jobType = jobInfo[0]; // JOBN JCPL etc
@@ -89,32 +89,18 @@ public class Client {
             jobInfo = jobMessage.split(" ");
             noOfServers = Integer.parseInt(jobInfo[1])-1; // nRecs value 
 
-       
-
-         
-            
-
-           
-
-
             int serverID = 0; 
-         
-            // SOMETHING HERE 
-            System.out.println(jobMessage + ": Before"); // DATA 
-
-
+ 
             if (noOfServers > 0) {
                 for (int i = 0; i < noOfServers+1; i++){
                     jobMessage = readFromBuffer(din);
-                    System.out.println(jobMessage);
+            
                 }
-                System.out.println(readFromBuffer(din) + "RECEVIED"); // Receive . 
+                System.out.println(readFromBuffer(din)); // Receive . 
                 dout.write(("OK\n").getBytes());
             } else
                 jobMessage = readFromBuffer(din);
 
-                
-            System.out.println(jobMessage + ": After");
             jobInfo = jobMessage.split(" ");
             jobID = Integer.parseInt(jobInfo[1]);
 
@@ -124,16 +110,12 @@ public class Client {
 
 
             while (!(jobMessage.equals("NONE"))){
-                System.out.println(jobMessage + " BEFORE");
                 dout.write(("REDY\n").getBytes());
                 jobMessage = readFromBuffer(din);
-                System.out.println(jobMessage + ": AFTER");
                 jobInfo = jobMessage.split(" ");
                 jobType = jobInfo[0];
-                System.out.println("serverID: " + serverID + " | noOfServers: " + noOfServers);
-
-                if ((jobType.equals("JOBN") && (serverID < noOfServers)) || (jobType.equals("JOBN") && (serverID >= noOfServers))){
-                    System.out.println("TEST ENTER LOOP" + serverID);
+    
+                if ((jobType.equals("JOBN"))){
                     jobID = Integer.parseInt(jobInfo[2]);
 
                     if (noOfServers == 0){
@@ -146,17 +128,8 @@ public class Client {
                         serverID = 0;
                     }
 
-                    /* 
-                    if (serverID > noOfServers)
-                        serverID--;
-                    dout.write(("SCHD " + jobID + " " + largestServerType + " " + serverID + "\n").getBytes());
-                    serverID++;
-                    */
-                    
                     jobType = jobInfo[0];
                     jobMessage = readFromBuffer(din); // SHOULD BE OK
-                    if (jobMessage.equals("OK"))
-                        System.out.println(jobMessage + ": INNER JOBMESSAGE");
                 
                 } else {
                     serverID = 0;
