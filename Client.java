@@ -25,6 +25,15 @@ public class Client {
             readFromBuffer(din);
     }
 
+    public static String[] getJobInfo(String jobMessage){
+        return jobMessage.split(" ");
+    }
+
+    public static String getSystemResourceInfo(String jobMessage){
+        String[] temp = Arrays.copyOfRange(getJobInfo(jobMessage), 4, 7);
+        return temp[0] + " " + temp[1] + " " + temp[2];
+    }
+
 
     public static void main(String args[]) {
         try {
@@ -65,6 +74,7 @@ public class Client {
       
             for (int i = 0; i < nRecs; i++){
                 jobMessage = readFromBuffer(din); // eg. juju 0 booting 120 0 2500 13100 1 0 
+                System.out.println(getSystemResourceInfo(jobMessage));
                 jobInfo = jobMessage.split(" ");
                 currentCoreSize = Integer.parseInt(jobInfo[4]);
             
@@ -87,15 +97,13 @@ public class Client {
                 jobMessage = readFromBuffer(din); // eg. juju 0 booting 120 0 2500 13100 1 0 
                 jobInfo = jobMessage.split(" ");
                 currentCoreSize = Integer.parseInt(jobInfo[4]);
-                // Future note for Lucas, noOfServers is always 0 at this point because it's assigned furtherdown. 
-                // Never enters this loop. 
                
                 if ((currentCoreSize == largestCoreSize) && !encounteredFirst){
                     largestServerType = jobInfo[0];
                     encounteredFirst = true;
                 }
             }
-            // Sometimes unfinished line? 
+
             dout.write(("OK\n").getBytes());
 
             // Receive Largest Server Type Info 
